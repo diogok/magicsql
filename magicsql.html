@@ -1,0 +1,27 @@
+<h1>MagicSQL: O pior framework de ORM e SQL para PHP.</h1>
+
+<p>Disclaimer: eu que fiz.</p>
+
+<p>A muito tempo atr&aacute;s, numa terra distante, um amigo me perguntou sobre <strong>Orienta&ccedil;&atilde;o a Objetos em PHP</strong>, e sobre <strong>ORM</strong>, como resposta eu fiz essa pequena biblioteca para demonstrar o b&aacute;sico do b&aacute;sico. <strong>O "framework" MagicSQL</strong>!</p>
+
+<p>Sinceramente tenho vergonha dela, n&atilde;o era nada s&eacute;rio e nem tomei muitos cuidados na &eacute;poca com <strong>boas pr&aacute;ticas e testes e documenta&ccedil;&atilde;o</strong>, era s&oacute; para ver alguns recursos. Mas ela funciona e eu usei em alguns projetinhos, mas se for escolher algum <strong>ORM para PHP</strong>, fa&ccedil;a uma escolha mais s&eacute;ria.</p>
+
+<p>De qualquer forma estava revendo e resolvi publicar o c&oacute;digo, "just because". Voc&ecirc; pode conferir o c&oacute;digo no <a href='http://github.com/diogok/magicsql'>Reposit&oacute;rio do MagicSQL</a>. Vamos a uma an&aacute;lise chata:</p>
+
+<p>Primeiro ponto: ela <strong>funciona</strong>. Como eu usei ela um pouco ent&atilde;o o que est&aacute; l&aacute; est&aacute; funcionando nos casos testados(e mais alguns). Ela consegue fazer selects, updates, inserts, deletes e <strong>join</strong>s sozinha. E_STRICT.</p>
+
+<p>Segundo ponto: <strong>n&atilde;o tem configura&ccedil;&atilde;o</strong>. Nenhuma. Voc&ecirc; cria a conex&atilde;o no c&oacute;digo mesmo (como se fosse PDO) e instancia o Reposit&oacute;rio. O resto &eacute; m&aacute;gica (e n&atilde;o confie em m&aacute;gica). Ela advinha seu schema usando describe e show tables, e faz uns c&aacute;lculos para adivinhar os joins (Essa &eacute; uma parte engra&ccedil;ada do c&oacute;digo).</p>
+
+<p>Not lazy: Cada "requisi&ccedil;&atilde;o" faz s&oacute; uma query, mesmo com joins. Ou seja, mesmo quando voc&ecirc; carrega uma lista de objetos com listas de objetos relacionados, n&atilde;o importa o tamanho do join, &eacute; uma query s&oacute; e tudo &eacute; carregado numa tacada s&oacute; e transformado em objetos. N&atilde;o queira ver esse c&oacute;digo tamb&eacute;m.</p>
+
+<p>StdClass p&uacute;blica: ele n&atilde;o usa seus objetos, apenas StdClass com atributos p&uacute;blicos. Whatever.</p>
+
+<p>PDO e ArrayObject: Toda lista e resultado s&atilde;o <strong>ArrayObject</strong> (na verdade MagicCollection), ent&atilde;o $arr[0] == $arr->get(0). Sua conex&atilde;o &eacute; um <strong>PDO</strong>, caso voc&ecirc; precise.</p>
+
+<p>Quase sem documenta&ccedil;&atilde;o: Acho at&eacute; que tem alguns coment&aacute;rios quaisquer, mas n&atilde;o tem PHPDoc e a documenta&ccedil;&atilde;o em si &eacute; quase nula. Mas est&aacute; l&aacute; no README, example.php e test.php.
+
+<p>Noob testing: Bom, pelo menos tem testes unit&aacute;rios (ou algo parecido). Na &eacute;poca n&atilde;o tinha escolhido um framework, e como foi algo bem r&aacute;pido e sujo, tem s&oacute; um monte de chamadas com ifs e testes para saber se tudo correu bem. Tem at&eacute; um teste que ainda falha por que nunca precisei da sua implementa&ccedil;&atilde;o (ou porque perdi a implementa&ccedil;&atilde;o).</p>
+
+<p>MySql e SQLite: O objetivo inicial foi o sqlite, depois o MySql porque &eacute; o que mais uso. Apesar de usar PDO o m&eacute;todo de "discovery" do schema n&atilde;o &eacute; padr&atilde;o.</p>
+
+<p>Usem um <a href='http://manifesto.blog.br/1.5/Blog/PHP/php-orm.html'>ORM PHP</a>de verdade, e n&atilde;o esse, mas o c&oacute;digo est&aacute; ai para sua divers&atilde;o.</p>

@@ -1,0 +1,71 @@
+MagicSql
+
+This is a Magical Sql library (and kind of an ORM) that is poorly written and not well tested. You should not use it, really. But still...
+
+MagicSql uses "describe" to get to know of your database and generate the sql queries needed magicly, and by the powers of MagicRepository it is also able to discover the full database schema (big deal...) and it's relations, performing optimized Joins (anyway, most of the time).
+
+It's usage is damn simple:
+
+$con = Connection::MySql($server,$user,$pass,$database);
+$repo = new MagicRepository($con);
+
+Let's supose the schema is: news { id, title, content, author_id } and authors { id, name }
+
+The method getNew generate a null filled object:
+
+$author = $repo->table("authors")->getNew();
+$author->name = "Diogo";
+$repo->table("authors")->insert($author);
+$new = $repo->table("news")->getNew();
+
+The insert sets the id:
+
+$new->author_id = $author->id ;
+$new->title = "MagicSql is magical" ;
+$new->repotent = "How to use it";
+$repo->table("news")->insert($new);
+
+$new->repotent = "How to use it in real project.";
+$repo->table("news")->update($new);
+
+There are several ways to "select" data, here just the main ones:
+$authorDB = $repo->table("authors");
+$author = $authorDB->get(1); // will give the author of id=1
+$authors = $authorDB->get("name","Diogo"); // list of authors where name = diogo
+// The lists are collection (ArrayObject)
+$diogo = $authors[0];
+$diogo = $authors->get(0);
+$fields = array("title","content");
+$values = array("Magic%","%Magic%");
+// where title like "Magic%" and content like "%Magic%"
+$news = $repo->table("news")->get($fields,$values);
+// now with OR operator
+$news = $repo->table("news")->searchAny($fields,$values);
+// Search, SearchAny and Get have basicly the same use, and the same interface
+// A more complete query
+$order = "title ASC";
+$limit = "1,1";
+$news = $repo->table("news")->get($fields,$values,$order,$limit);
+// And a mostly custom query
+$news = $repo->table("news")->select("title like 'Magic%' OR title = 'test'");
+$news = $repo->table("news")->select("title like 'Magic%' OR title = 'test'",$order,$limit);
+// You can go for the pdo if needed
+$result = $con->query($sql);
+
+As I said it can perform joins:
+
+$author = $repo->table("authors")->get(1);
+echo $author->news[0]->title;
+// $author->news is also a ArrayObject,
+
+The other way is possible too
+$news = $repo->table("news")->get(1);
+echo $news->author[0]->name;
+
+That is it.
+
+It does not do recursive delete/insert/update.
+
+To see more look at example.php and test.php (even if they are in portuguese now, code is code).
+
+Now seriously, I've written this a long ago to demostrate some resources for a friend and, it is not that bad and works ok, but it's not a very serious library(but I have used it in a couple projects with success and improved it a bit). Just see the example.php and test.php to see the lazyness. I don't use it much anymore, instead go for PHP Outlet ORM or other. Anyway, have fun! 
