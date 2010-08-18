@@ -73,6 +73,7 @@ class MagicRepository {
                 foreach($joins as $join) {
                     foreach($join as $j) {
                         $this->get($j['table'])->configureJoin($db->table,$j['foreign'],$j['key'],$db);
+                        $this->get($db->table)->configureJoin($j['table'],$j['key'],$j['foreign'],$this->get($j['table']));
                     }
                 }
             }

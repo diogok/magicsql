@@ -50,7 +50,7 @@ class MagicSql {
     private function configureMySql() {
         $query = $this->con->query("describe ".$this->table." ");
         while($obj = $query->fetchObject()) {
-           if($obj->Extra != "auto_increment")
+//           if($obj->Extra != "auto_increment")
                 $this->fields[] = $obj->Field ;
            if($obj->Key == "PRI")
                 $this->index = $obj->Field ;
@@ -128,7 +128,7 @@ class MagicSql {
         return $num ;
     }
 
-    function select($where=null,$order=null,$limit=null) {
+    function select($where=null,$order=null,$limit=null,$deep=1) {
         $sql = "select * from ".$this->table ;
         if($where != null) {
             $w = null ;
@@ -155,7 +155,8 @@ class MagicSql {
         while($obj = $query->fetchObject()) {
             $objs[] = $obj ;
         }
-        return $this->returnObject($objs) ;
+        $ret = $this->returnObject($objs,$deep) ;
+        return $ret;
     }
 
     function getById($id) {
@@ -270,7 +271,7 @@ class MagicSql {
         return false;
     }
 
-    private function returnObject($obj) {
+    private function returnObject($obj,$deep=2) {
         if($obj == null) return $obj ;
         if(is_array($obj)) {
             $col = new MagicCollection();
@@ -279,60 +280,58 @@ class MagicSql {
             }
             $obj = $col ;
         }
+        if($deep == -1) {
+            return $obj;
+        }
         if($this->hasJoin === false) return $obj;
         $r = null;
         foreach($this->joins as $j) {
-            if( (is_array($obj) and count($obj) >= 1 ) or $obj instanceof MagicCollection) {
-                $r = $this->multiJoin($obj,$j);
+            if( (is_array($obj) and count($obj) >= 1) or $obj instanceof MagicCollection) {
+                $r = $this->multiJoin($obj,$j,$deep - 1);
             } else {
-                $r = $this->doJoin($obj,$j);
+                $r = $this->doJoin($obj,$j,$deep - 1);
             }
         }
         return $r ;
     }
 
-    private function multiJoin($arr,$j){
+    private function multiJoin($arr,$j,$deep){
         $f = $j->foreign;
         $k = $j->key ;
         $t = $j->table ;
 
-        $col = null ;
+        $keys = array();
         foreach($arr as $obj) {
-            $keys[] = "'".$obj->$k."'" ;
-            $col[$obj->$k] = $obj ;
+            $key = "'".$obj->$k."'" ;
+            if(!in_array($key,$keys)) {
+                $keys[] = $key;
+            }
+            $obj->$t = new MagicCollection();
         }
-        unset($arr);
 
         $where =  $f." in (".implode(",",$keys).")";
-        $joins = $j->db->select($where);
+        $joins = $j->db->select($where,null,null,$deep);
 
-        $js = null ;
-        if(count($joins ) >= 1 ) {
-            foreach($joins as $j) {
-                $js[$j->$f][] = $j ;
-            }
-
-            foreach($js as $k=>$j) {
-                $col[$k]->$t = $j;
-            }
-        }
-
-        $r = new MagicCollection() ;
-        if(count($col) >= 1) {
-            foreach($col as $v) {
-                $r->append( $v );
+        if(count($joins) >= 1 ) {
+            foreach($joins as $join) {
+                foreach($arr as $obj) {
+                    if($join->$f == $obj->$k) {
+                        $obj->$t->append($join);
+                    }
+                }
             }
         }
 
-        return $r;
+        return $arr;
     }
 
-    private function doJoin($obj,$j) {
+    private function doJoin($obj,$j,$deep) {
         $f = $j->foreign;
         $k = $j->key ;
         $t = $j->table ;
         if($j->db != null) {
-            $arr = $j->db->select(array($f => $obj->$k));
+            $where =  $f." in ('".$obj->$k."')";
+            $arr = $j->db->select($where,null,null,$deep);
         }
         $obj->$t = $arr ;
         return $obj ;

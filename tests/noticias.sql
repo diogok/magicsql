@@ -9,7 +9,7 @@ create table noticias (
 create table destaques (
         id int(11) ,
         titulo varchar(200),
-        nome_autores int(11),
+        nome_autores varchar(220),
         primary key(id)
             );
 

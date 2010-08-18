@@ -2,7 +2,7 @@
 include '../MagicRepository.class.php';
 
 if(isset($argv[1]) == "mysql" ) {
-    $con = Connection::MySql("localhost","test","123","test");
+    $con = Connection::MySql("localhost","test","test","test");
     $con->query("drop table noticias");
     $con->query("drop table destaques");
     $con->query("drop table autores");
@@ -177,6 +177,8 @@ if(count($nots) > 1) {
     echo "Sucesso no get limit\n";
 }
 
+echo "\n";
+
 $rep  = new MagicRepository($con);
 
 $con->query("delete noticias;");
@@ -194,6 +196,8 @@ $con->query("insert into noticias (id , titulo, texto,id_autores) values ( 9 , '
 $con->query("insert into destaques (id , titulo, nome_autores) values ( 1 , 'Rock', 'diogo') ;");
 $con->query("insert into destaques (id , titulo, nome_autores) values ( 2 , 'Roll', 'diogo');");
 
+$con->query("insert into comm (id , com, id_autores) values ( 1 , 'Foobar', 2);");
+
 $diogo = $rep->table("autores")->get("nome","diogo")->get(0);
 
 if($diogo->nome !== "diogo") {
@@ -208,8 +212,7 @@ if($diogo->noticias[0]->titulo !== "test" or $diogo->noticias[1]->titulo !== "di
     echo "Sucesso no Join.\n";
 }
 
-var_dump($diogo->noticias[0]);
-if($diogo->noticias[0]->autores !== $diogo) {
+if(!isset($diogo->noticias) and $diogo->noticias[0]->autores[0] !== $diogo) {
     echo "Falha no Join Recursivo.\n";
 } else {
     echo "Sucesso no Join Recursivo.\n";
@@ -220,6 +223,22 @@ if($diogo->destaques[0]->titulo !== "Rock") {
 } else {
     echo "Sucesso no Multi Join.\n";
 }
+
+$noticia = $rep->table("noticias")->get(9);
+if(!isset($noticia->autores) and count($noticia->autores[0]) < 1 and $noticia->autores[0]->nome != "debora"){
+    echo "Falha no join reverso\n";
+    var_dump($noticia);
+} else {
+    echo "Sucesso no join reverso\n";
+    $di = $noticia->autores[0];
+    if(!isset($di->comm) and count($di->comm) < 1 and $di->comm->com != "foobar") {
+        echo "Falha no deep join reverso\n";
+        var_dump($noticia->autores[0]);
+    } else {
+        echo "Sucesso no deep join reverso\n";
+    }
+}
+
 
 if(!function_exists("xdebug_time_index")) return ;
 
